@@ -81,6 +81,9 @@ export default class VectorSynchronizer extends olcsAbstractSynchronizer<VectorL
 
   createSingleLayerCounterparts(olLayerWithParents: LayerWithParents): VectorLayerCounterpart[] {
     const olLayer: BaseLayer = olLayerWithParents.layer;
+    if (olLayer.get('olcs_skip')) {
+      return null;
+    }
     if (!(olLayer instanceof olLayerVector) || olLayer instanceof olLayerVectorTile) {
       return null;
     }
@@ -151,7 +154,9 @@ export default class VectorSynchronizer extends olcsAbstractSynchronizer<VectorL
 
     olListenKeys.push(source.on('changefeature', (e: VectorSourceEvent) => {
       const feature = e.feature;
-      console.assert(feature);
+      if (feature.get('olcs_skip')) {
+        return;
+      }
       onRemoveFeature(feature);
       onAddFeature(feature);
     }));
