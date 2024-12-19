@@ -153,10 +153,15 @@ export default class VectorSynchronizer extends olcsAbstractSynchronizer<VectorL
     }));
 
     olListenKeys.push(source.on('changefeature', (e: VectorSourceEvent) => {
+      console.assert(e.feature);
+
       const feature = e.feature;
+
+
       if (feature.get('olcs_skip')) {
         return;
       }
+
       onRemoveFeature(feature);
       onAddFeature(feature);
     }));

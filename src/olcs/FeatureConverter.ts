@@ -79,19 +79,18 @@ interface MaterialAppearanceOptions {
   }
 }
 
-const ZoomDistances = [null,null,null,11900000, 6100000, 2600000, 1280000, 640000, 380000, 250600, 139780, 67985, 26000, 13200, 6400, 2600, 1300, 660, 300, 100]
-const zoomToDistance = (zoom: number) => ZoomDistances[Math.round(zoom)]
-const setLayerDistanceDisplayConditions = (olLayer:VectorLayer): void =>{
-  const maxDistance = zoomToDistance(olLayer.getMinZoom()), minDistance = zoomToDistance(olLayer.getMaxZoom())
-  console.log(olLayer.name, minDistance, maxDistance)
-  if(maxDistance) {
-    olLayer.set('distanceDisplayCondition', new Cesium.DistanceDisplayCondition(minDistance || 0, maxDistance))
-    olLayer.set('distanceDisplayConditionGeometryInstanceAttribute', new Cesium.DistanceDisplayConditionGeometryInstanceAttribute(minDistance || 0, maxDistance))
-  } else if(minDistance) {
-    olLayer.set('distanceDisplayCondition', new Cesium.DistanceDisplayCondition(minDistance))
-    olLayer.set('distanceDisplayConditionGeometryInstanceAttribute', new Cesium.DistanceDisplayConditionGeometryInstanceAttribute(minDistance))
+const ZoomDistances = [null, null, null, 11900000, 6100000, 2600000, 1280000, 640000, 380000, 250600, 139780, 67985, 26000, 13200, 6400, 2600, 1300, 660, 300, 100];
+const zoomToDistance = (zoom: number) => ZoomDistances[Math.round(zoom)];
+const setLayerDistanceDisplayConditions = (olLayer:VectorLayer): void => {
+  const maxDistance = zoomToDistance(olLayer.getMinZoom()), minDistance = zoomToDistance(olLayer.getMaxZoom());
+  if (maxDistance) {
+    olLayer.set('distanceDisplayCondition', new Cesium.DistanceDisplayCondition(minDistance || 0, maxDistance));
+    olLayer.set('distanceDisplayConditionGeometryInstanceAttribute', new Cesium.DistanceDisplayConditionGeometryInstanceAttribute(minDistance || 0, maxDistance));
+  } else if (minDistance) {
+    olLayer.set('distanceDisplayCondition', new Cesium.DistanceDisplayCondition(minDistance));
+    olLayer.set('distanceDisplayConditionGeometryInstanceAttribute', new Cesium.DistanceDisplayConditionGeometryInstanceAttribute(minDistance));
   }
-}
+};
 
 export default class FeatureConverter {
 
@@ -167,17 +166,18 @@ export default class FeatureConverter {
    */
   protected createColoredPrimitive(layer: PrimitiveLayer, feature: Feature, olGeometry: OLGeometry, geometry: CSGeometry | CircleGeometry, color: CSColor| ImageMaterialProperty, opt_lineWidth?: number): Primitive | GroundPrimitive {
     const createInstance = function(geometry: CSGeometry | CircleGeometry, color: CSColor | ImageMaterialProperty) {
-      const attributes = {
-        distanceDisplayCondition: layer.get('distanceDisplayConditionGeometryInstanceAttribute')
-      }
+      let colorAttribute:any;
 
       if (color && !(color instanceof Cesium.ImageMaterialProperty)) {
-        attributes.color = Cesium.ColorGeometryInstanceAttribute.fromColor(color)
-      } 
+        colorAttribute = Cesium.ColorGeometryInstanceAttribute.fromColor(color);
+      }
 
       const instance = new Cesium.GeometryInstance({
         geometry,
-        attributes
+        attributes: {
+          distanceDisplayCondition: layer.get('distanceDisplayConditionGeometryInstanceAttribute'),
+          color: colorAttribute || undefined
+        }
       });
       return instance;
     };
@@ -405,7 +405,7 @@ export default class FeatureConverter {
 
     const attributes = {
       distanceDisplayCondition: layer.get('distanceDisplayConditionGeometryInstanceAttribute')
-    }
+    };
 
     if (this.getHeightReference(layer, feature, olGeometry) === Cesium.HeightReference.CLAMP_TO_GROUND) {
       const width = this.extractLineWidthFromOlStyle(olStyle);
@@ -465,7 +465,7 @@ export default class FeatureConverter {
     });
     const attributes = {
       distanceDisplayCondition: layer.get('distanceDisplayConditionGeometryInstanceAttribute')
-    }
+    };
     if (heightReference === Cesium.HeightReference.CLAMP_TO_GROUND) {
       const geometry = new Cesium.GroundPolylineGeometry({
         positions,
@@ -580,7 +580,7 @@ export default class FeatureConverter {
 
       const attributes = {
         distanceDisplayCondition: layer.get('distanceDisplayConditionGeometryInstanceAttribute')
-      }
+      };
 
       // Since Cesium doesn't yet support Polygon outlines on terrain yet (coming soon...?)
       // we don't create an outline geometry if clamped, but instead do the polyline method
@@ -696,8 +696,8 @@ export default class FeatureConverter {
           image.naturalHeight != 0 &&
           image.naturalWidth != 0 &&
           image.complete;
-    }; 
-    const distanceDisplayCondition = layer.get('distanceDisplayCondition')
+    };
+    const distanceDisplayCondition = layer.get('distanceDisplayCondition');
 
     const reallyCreateBillboard = (function() {
       if (!image) {
@@ -1007,7 +1007,7 @@ export default class FeatureConverter {
       options.verticalOrigin = verticalOrigin;
     }
 
-    options.distanceDisplayCondition = layer.get('distanceDisplayCondition')
+    options.distanceDisplayCondition = layer.get('distanceDisplayCondition');
 
     const l = labels.add(options);
     this.setReferenceForPicking(layer, feature, l);
@@ -1199,7 +1199,7 @@ export default class FeatureConverter {
     const counterpart = new VectorLayerCounterpart(proj, this.scene);
     const context = counterpart.context;
 
-    setLayerDistanceDisplayConditions(olLayer)
+    setLayerDistanceDisplayConditions(olLayer);
 
     for (let i = 0; i < features.length; ++i) {
       const feature = features[i];
@@ -1248,7 +1248,7 @@ export default class FeatureConverter {
    */
   convert(layer: VectorLayer<BackwardCompatibleFeature>, view: View, feature: Feature, context: OlFeatureToCesiumContext): PrimitiveCollection {
     if (feature.get('olcs_skip')) {
-      return ;
+      return;
     }
 
     const proj = view.getProjection();
